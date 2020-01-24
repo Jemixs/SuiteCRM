@@ -77,11 +77,43 @@ class OpportunitiesViewEdit extends ViewEdit
     public function display()
     {
         global $app_list_strings;
+        $db = \DBManagerFactory::getInstance();
+
         $json = getJSONobj();
         $prob_array = $json->encode($app_list_strings['sales_probability_dom']);
         $prePopProb = '';
         if (empty($this->bean->id) && empty($_REQUEST['probability'])) {
             $prePopProb = 'document.getElementsByName(\'sales_stage\')[0].onchange();';
+        }
+
+        $query = "SELECT
+        SUM(opportunity_type LIKE 'New Business') AS countH,
+        SUM(opportunity_type LIKE 'Existing Business') AS countC
+        FROM `opportunities`
+        ";
+        $getCount = $GLOBALS['db']->fetchByAssoc($GLOBALS['db']->query($query));
+        $countC = (int)$getCount[countC]++;
+        $countH = (int)$getCount[countH]++;
+
+        if (!empty($this->bean->id)) {
+            $prePopProb .= "$(document).ready( function() {
+                $('#opportunity_type, #name').prop({'disabled':true, 'title':'".$app_list_strings['issue_resolution_dom']['Closed']."'});
+                $('#opportunity_type').css({'background':'#f8f8f8','border': '1px solid #e2e7eb'});
+            })";
+        } else {
+            $prePopProb .= "$(document).ready( function() {
+                $('#opportunity_type').change( function() {
+                    if ($('#opportunity_type').val() == 'Existing Business') {
+                        $('#name').prop('readonly', true).val('C000$getCount[countC]').css('background', '#e8e8e8');
+                    } else if($('#opportunity_type').val() == 'New Business') {
+                        $('#name').prop('readonly', true).val('H000$getCount[countH]').css('background', '#e8e8e8');
+                    } else {
+                        $('#name').prop('readonly', false).val('').css('background', 'unset');
+                    }
+                });
+            } 
+            );
+            ";
         }
 
         $probability_script=<<<EOQ
