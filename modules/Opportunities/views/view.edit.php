@@ -77,7 +77,6 @@ class OpportunitiesViewEdit extends ViewEdit
     public function display()
     {
         global $app_list_strings;
-        $db = \DBManagerFactory::getInstance();
 
         $json = getJSONobj();
         $prob_array = $json->encode($app_list_strings['sales_probability_dom']);
